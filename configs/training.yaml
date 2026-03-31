@@ -1,0 +1,27 @@
+# configs/training.yaml
+
+paths:
+  input_features: "data/processed/train_features_final.csv"
+  export_dir: "models_artifacts"
+
+training_logic:
+  target_col: "TARGET"
+  test_size: 0.2
+  stratify: true
+  random_state: 42
+
+monitoring:
+  calculate_ks: true
+  calculate_gini: true
+  calculate_auc: true
+  calculate_brier: true
+  calculate_calibration_error: true
+
+champion_selection:
+  # Composite score weights — must sum to 1.0
+  # Calibration weighted highest due to poor baseline calibration
+  weights:
+    ks: 0.25
+    gini: 0.25
+    auc: 0.20
+    calibration_error: 0.30   # higher weight — lower is better

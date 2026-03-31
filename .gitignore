@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Environments
+env/
+env2/
+venv/
+.venv/
+
+# Data — never push raw or processed data (too large)
+data/raw/
+data/processed/
+
+# Monitoring reports
+monitoring_reports/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.DS_Store
+
+# Env vars
+.env
+
+# Allow model files for Streamlit deployment
+!models/
+!models/feature_pipeline.joblib
+!models_artifacts/
+!models_artifacts/**
+!models_artifacts/**/model.pkl
+!models_artifacts/**/metrics.json
+!models_artifacts/**/scorecard.csv
