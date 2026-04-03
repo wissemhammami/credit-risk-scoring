@@ -6,18 +6,12 @@ from pathlib import Path
 from src.models.scorecard import create_scorecard
 from src.models.registry import ModelRegistry
 
-# --------------------------------------------------
-# Page config
-# --------------------------------------------------
 st.set_page_config(
     page_title="Credit Risk Scoring",
     page_icon="🏦",
     layout="centered"
 )
 
-# --------------------------------------------------
-# Load model and pipeline
-# --------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
 
 
@@ -36,25 +30,17 @@ except Exception as e:
     model_loaded = False
     st.error(f"Failed to load model: {e}")
 
-# --------------------------------------------------
-# App header
-# --------------------------------------------------
 st.title("🏦 Credit Risk Scoring")
 st.markdown("Enter applicant details to get a credit decision.")
 st.divider()
 
-# --------------------------------------------------
-# Input form
-# --------------------------------------------------
 with st.form("applicant_form"):
 
     st.subheader("Personal Information")
     col1, col2 = st.columns(2)
 
     with col1:
-        age = st.number_input(
-            "Age (years)", min_value=18, max_value=70, value=35
-        )
+        age = st.number_input("Age (years)", min_value=18, max_value=70, value=35)
         gender = st.selectbox("Gender", ["M", "F", "XNA"])
         education = st.selectbox("Education", [
             "Secondary / secondary special",
@@ -73,11 +59,7 @@ with st.form("applicant_form"):
 
     with col2:
         income = st.number_input(
-            "Annual Income ($)",
-            min_value=0,
-            max_value=10000000,
-            value=150000,
-            step=5000,
+            "Annual Income ($)", min_value=0, max_value=10000000, value=150000, step=5000
         )
         income_type = st.selectbox("Income Type", [
             "Working",
@@ -94,36 +76,22 @@ with st.form("applicant_form"):
             "Office apartment",
             "Co-op apartment",
         ])
-        contract_type = st.selectbox(
-            "Contract Type", ["Cash loans", "Revolving loans"]
-        )
+        contract_type = st.selectbox("Contract Type", ["Cash loans", "Revolving loans"])
 
     st.subheader("Loan Details")
     col3, col4 = st.columns(2)
 
     with col3:
         credit_amount = st.number_input(
-            "Credit Amount ($)",
-            min_value=0,
-            max_value=10000000,
-            value=500000,
-            step=10000,
+            "Credit Amount ($)", min_value=0, max_value=10000000, value=500000, step=10000
         )
         annuity = st.number_input(
-            "Annual Annuity ($)",
-            min_value=0,
-            max_value=1000000,
-            value=25000,
-            step=1000,
+            "Annual Annuity ($)", min_value=0, max_value=1000000, value=25000, step=1000
         )
 
     with col4:
         goods_price = st.number_input(
-            "Goods Price ($)",
-            min_value=0,
-            max_value=10000000,
-            value=450000,
-            step=10000,
+            "Goods Price ($)", min_value=0, max_value=10000000, value=450000, step=10000
         )
         days_employed = st.number_input(
             "Years Employed", min_value=0, max_value=50, value=5
@@ -132,19 +100,14 @@ with st.form("applicant_form"):
     st.subheader("External Scores")
     col5, col6, col7 = st.columns(3)
     with col5:
-        ext1 = st.slider("External Score 1", 0.0, 1.0, 0.5)
+        ext1 = st.slider("External Score 1", 0.0, 1.0, 0.3)
     with col6:
-        ext2 = st.slider("External Score 2", 0.0, 1.0, 0.5)
+        ext2 = st.slider("External Score 2", 0.0, 1.0, 0.3)
     with col7:
-        ext3 = st.slider("External Score 3", 0.0, 1.0, 0.5)
+        ext3 = st.slider("External Score 3", 0.0, 1.0, 0.3)
 
-    submitted = st.form_submit_button(
-        "Predict Credit Risk", use_container_width=True
-    )
+    submitted = st.form_submit_button("Predict Credit Risk", use_container_width=True)
 
-# --------------------------------------------------
-# Prediction
-# --------------------------------------------------
 if submitted and model_loaded:
 
     input_data = pd.DataFrame([{
@@ -171,16 +134,17 @@ if submitted and model_loaded:
     }])
 
     try:
-        # Fill all missing columns the pipeline expects with 0
+        # Get all columns the pipeline expects
         preprocessor = pipeline.named_steps["preprocessor"]
         all_expected = []
         for _, _, cols in preprocessor.transformers:
             if isinstance(cols, list):
                 all_expected.extend(cols)
 
-        for col in all_expected:
-            if col not in input_data.columns:
-                input_data[col] = 0
+        # Fill missing columns all at once — avoids fragmentation warning
+        missing_cols = [col for col in all_expected if col not in input_data.columns]
+        missing_df = pd.DataFrame(0, index=input_data.index, columns=missing_cols)
+        input_data = pd.concat([input_data, missing_df], axis=1)
 
         # Transform and predict
         X_transformed = pipeline.transform(input_data)
@@ -195,9 +159,6 @@ if submitted and model_loaded:
         score = float(scorecard["Score"].iloc[0])
         decision = scorecard["Decision"].iloc[0]
 
-        # --------------------------------------------------
-        # Display results
-        # --------------------------------------------------
         st.divider()
         st.subheader("Results")
 
